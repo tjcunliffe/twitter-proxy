@@ -24,4 +24,5 @@ _testmain.go
 *.test
 *.prof
 
+/conf.json
 # Created by .ignore support plugin (hsz.mobi)
