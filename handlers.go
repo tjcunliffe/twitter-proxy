@@ -3,10 +3,29 @@ import (
 	"net/http"
 	log "github.com/Sirupsen/logrus"
 	"io/ioutil"
-
+    "strings"
 )
 
 func (h HTTPClientHandler) tweetSearchEndpoint(w http.ResponseWriter, r *http.Request) {
+
+	mirageSession := r.Header.Get("MirageScenarioSession")
+	// session format should be "scenario:session"
+	slices := strings.Split(mirageSession, ":")
+	if len(slices) < 2 {
+		msg := "Bad request, missing session or scenario name. When under proxy, please use 'scenario:session' format in your" +
+		"URL query, such as '/stubo/api/put/stub?session=scenario:session_name' "
+		log.Warn(msg)
+		http.Error(w, msg, 400)
+		return
+	}
+	scenario := slices[0]
+	session := slices[1]
+
+	log.WithFields(log.Fields{
+		"Scenario": scenario,
+		"Session": session,
+	}).Info("Got scenario and session!...")
+
 	// getting query
 	urlQuery := r.URL.Query()
 	// getting submitted query string
