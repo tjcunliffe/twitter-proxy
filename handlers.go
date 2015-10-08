@@ -2,13 +2,16 @@ package main
 import (
 	"net/http"
 	log "github.com/Sirupsen/logrus"
+	"io/ioutil"
 )
 
-func (h HTTPClientHandler) tweetSearchEndpoint(w *http.ResponseWriter, r *http.Request) {
+func (h HTTPClientHandler) tweetSearchEndpoint(w http.ResponseWriter, r *http.Request) {
 	// getting query
 	urlQuery := r.URL.Query()
 	// getting submitted query string
 	queryString := urlQuery["q"]
+
+	client := h.http.HTTPClient
 
 	if Record {
 		log.Info("*RECORD* mode detected")
@@ -34,12 +37,21 @@ func (h HTTPClientHandler) tweetSearchEndpoint(w *http.ResponseWriter, r *http.R
 			log.WithFields(log.Fields{
 				"key": k,
 				"value": v,
-			}).Info("app is starting")
+			}).Info("Reading headers...")
 
 			// adding key/value pairs
 			req.Header.Add(k, v)
 		}
+        // performing request
+		resp, err := client.Do(req)
 
+		defer resp.Body.Close()
+		// reading body
+		body, err := ioutil.ReadAll(resp.Body)
+
+		// setting response header, status code and body
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(resp.StatusCode)
+		w.Write(body)
 	}
-
 }
