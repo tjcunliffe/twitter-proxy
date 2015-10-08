@@ -3,6 +3,7 @@ import (
 	"net/http"
 	log "github.com/Sirupsen/logrus"
 	"io/ioutil"
+
 )
 
 func (h HTTPClientHandler) tweetSearchEndpoint(w http.ResponseWriter, r *http.Request) {
@@ -36,22 +37,32 @@ func (h HTTPClientHandler) tweetSearchEndpoint(w http.ResponseWriter, r *http.Re
 		for k, v := range r.Header {
 			log.WithFields(log.Fields{
 				"key": k,
-				"value": v,
+				"value": v[0],
 			}).Info("Reading headers...")
 
 			// adding key/value pairs
-			req.Header.Add(k, v)
+			req.Header.Add(k, v[0])
 		}
         // performing request
 		resp, err := client.Do(req)
+
+		if err != nil {
+			log.Error("Failed to get response!", err)
+		}
 
 		defer resp.Body.Close()
 		// reading body
 		body, err := ioutil.ReadAll(resp.Body)
 
-		// setting response header, status code and body
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(resp.StatusCode)
+		if err != nil {
+			log.Error("Failed to read response body", err)
+		}
+		// now setting all headers from external response
+		// back to the "our" response so it looks as if nothing has
+		// tampered with it
+		for k, v := range resp.Header {
+			w.Header().Set(k, v[0])
+		}
 		w.Write(body)
 	}
 }
