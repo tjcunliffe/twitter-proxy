@@ -5,6 +5,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"io/ioutil"
     "bytes"
+	"errors"
 )
 
 type params struct {
@@ -12,6 +13,40 @@ type params struct {
 	bodyBytes          []byte
 	headers            map[string]string
 }
+
+// putStub transparently passes request body to Mirage
+func (c *Client) putStub(scenario, session, args string, body []byte, headers map[string]string) ([]byte, int, error) {
+
+
+
+	if session, ok := headers["session"]; ok {
+		if scenario != "" && session != "" {
+			var s params
+
+			path := AppConfig.MirageEndpoint + "/stubo/api/v2/scenarios/objects/" + scenario + "/stubs?" + args
+
+			s.url = path
+			s.headers = headers
+			s.method = "PUT"
+
+			// assigning body in bytes
+			s.bodyBytes = body
+			// setting logger
+			log.WithFields(log.Fields{
+				"scenario":      scenario,
+				"session":       headers["session"],
+				"urlPath":       path,
+				"headers":       "",
+				"requestMethod": s.method,
+			}).Debug("Adding stub to scenario")
+
+			return c.makeRequest(s)
+		}
+		return []byte(""), http.StatusBadRequest, errors.New("mirage.putStub error: scenario or session not supplied")
+	}
+	return []byte(""), http.StatusBadRequest, errors.New("mirage.putStub error: session key not supplied")
+}
+
 
 
 // makeRequest takes Params struct as parameters and makes request to Mirage
