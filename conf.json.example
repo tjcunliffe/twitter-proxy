@@ -1,4 +1,4 @@
 {
-  "TwitterKey": "your_key",
-  "TwitterSecret": "your_secret"
+  "MirageEndpoint": "mirage_endpoint:8001",
+  "ExternalSystem": "external_system"
 }
