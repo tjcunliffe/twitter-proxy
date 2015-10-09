@@ -91,28 +91,36 @@ func createMiragePayload(matcher string, request *http.Request) (Mirage){
 
 }
 
-			path := AppConfig.MirageEndpoint + "/stubo/api/v2/scenarios/objects/" + scenario + "/stubs?" + args
+// helper function for development
+func prettyprint(b []byte) ([]byte, error) {
+	var out bytes.Buffer
+	err := json.Indent(&out, b, "", "  ")
+	return out.Bytes(), err
+}
 
-			s.url = path
-			s.headers = headers
-			s.method = "PUT"
+// recordRequest records supplied request to Mirage. Parameters taken:
+// scenario - scenario name, usually you have to create scenario manually
+// session - session name should be in "Record" mode for a recording to be successful
+// matcher - matcher is a parameter that will be the key for retrieving response during playback
+func (c *Client) recordRequest(scenario, session, matcher string, request *http.Request) () {
 
-			// assigning body in bytes
-			s.bodyBytes = body
-			// setting logger
-			log.WithFields(log.Fields{
-				"scenario":      scenario,
-				"session":       headers["session"],
-				"urlPath":       path,
-				"headers":       "",
-				"requestMethod": s.method,
-			}).Debug("Adding stub to scenario")
+	if(scenario != "" && session != "") {
+		var s params
 
-			return c.makeRequest(s)
-		}
-		return []byte(""), http.StatusBadRequest, errors.New("mirage.putStub error: scenario or session not supplied")
+		path := AppConfig.MirageEndpoint + "/stubo/api/v2/scenarios/objects/" + scenario + "/stubs"
+		s.url = path
+		s.method = "PUT"
+
+		miragePayload := createMiragePayload(matcher, request)
+
+		bts, _ := json.Marshal(miragePayload)
+		b, _ := prettyprint(bts)
+		fmt.Printf("%s", b)
+
+	} else{
+		log.Error("Scenario or session not supplied.")
 	}
-	return []byte(""), http.StatusBadRequest, errors.New("mirage.putStub error: session key not supplied")
+    return
 }
 
 
@@ -141,26 +149,10 @@ func (c *Client) makeRequest(s params) ([]byte, int, error) {
 	//req.Header.Set("X-Custom-Header", "myvalue")
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := c.HTTPClient.Do(req)
-	if err != nil {
-		// logging read error
-		log.WithFields(log.Fields{
-			"error": err.Error(),
-			"url":   s.url,
-		}).Warn("Failed to get response from Mirage!")
 
-		return []byte(""), http.StatusInternalServerError, err
-	}
 	defer resp.Body.Close()
 	// reading body
 	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		// logging read error
-		log.WithFields(log.Fields{
-			"error": err.Error(),
-			"url":   s.url,
-		}).Warn("Failed to read response from Mirage!")
 
-		return []byte(""), http.StatusInternalServerError, err
-	}
-	return body, resp.StatusCode, nil
+	return body, resp.StatusCode, err
 }
