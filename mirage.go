@@ -3,17 +3,11 @@ package main
 import (
 	"net/http"
 	log "github.com/Sirupsen/logrus"
-	"io/ioutil"
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 )
-
-// contains is a structure to store multiple request matchers
-//type contains struct {
-//	Contains []string `json:contains`
-//}
-
 
 // req structure holds original request to proxy structure which is a part of Mirage payload
 // BodyPatterns usually holds "contains" key..
@@ -38,25 +32,12 @@ type Mirage struct {
 	Response res `json:response`
 }
 
-
+// params structure holds information about request to Mirage formation
 type params struct {
-	url, body, method string
-	bodyBytes         []byte
-	headers           map[string]string
+	url, session, method string
+	bodyBytes            []byte
+	headers              map[string]string
 }
-//
-//// getBodyBytes is a helper method to read re
-//func getBodyBytes(req i) ([]byte, error) {
-//	defer req.Body.Close()
-//	// reading body
-//	body, err := ioutil.ReadAll(req.Body)
-//	if (err != nil) {
-//		log.WithFields(log.Fields{
-//			"Error": err,
-//		}).Error("Failed to read request body bytes and log error if there is one")
-//	}
-//	return body, err
-//}
 
 // getHeaders forms a map of headers from http request headers
 func getHeaders(req *http.Request) (map[string]string) {
@@ -98,7 +79,7 @@ func createMiragePayload(matcher string, request *http.Request, response *http.R
 	// formatting response part
 	mirageObj.Response.Status = response.StatusCode
 	// getting response headers
-    mirageObj.Response.Headers = getHeadersMap(response.Header)
+	mirageObj.Response.Headers = getHeadersMap(response.Header)
 	// adding external service response body
 	mirageObj.Response.Body = body
 
@@ -127,12 +108,20 @@ func (c *Client) recordRequest(scenario, session, matcher string, request *http.
 		path := AppConfig.MirageEndpoint + "/stubo/api/v2/scenarios/objects/" + scenario + "/stubs"
 		s.url = path
 		s.method = "PUT"
+		s.session = session
 
+		// getting mirage payload structure
 		miragePayload := createMiragePayload(matcher, request, response, body)
-
+		// converting it to json bytes
 		bts, _ := json.Marshal(miragePayload)
+		s.bodyBytes = bts
+
+		// pretty printing for debugging
 		b, _ := prettyprint(bts)
 		fmt.Printf("%s", b)
+
+		// uploading payload to Mirage
+        c.makeRequest(s)
 
 	} else {
 		log.Error("Scenario or session not supplied.")
@@ -144,32 +133,43 @@ func (c *Client) recordRequest(scenario, session, matcher string, request *http.
 
 // makeRequest takes Params struct as parameters and makes request to Mirage
 // then gets response bytes and returns to caller
-func (c *Client) makeRequest(s params) ([]byte, int, error) {
-
-	if s.bodyBytes == nil {
-		s.bodyBytes = []byte(s.body)
-	}
+func (c *Client) makeRequest(s params) () {
 
 	log.WithFields(log.Fields{
 		"url":           s.url,
-		"body":          s.body,
+		"session":       s.session,
 		"headers":       s.headers,
 		"requestMethod": s.method,
-	}).Info("Transforming URL, preparing for request to Stubo")
+	}).Info("Transforming URL, preparing for request to MIrage")
 
 	req, err := http.NewRequest(s.method, s.url, bytes.NewBuffer(s.bodyBytes))
-	if s.headers != nil {
-		for k, v := range s.headers {
-			req.Header.Set(k, v)
-		}
-	}
-	//req.Header.Set("X-Custom-Header", "myvalue")
+//	if s.headers != nil {
+//		for k, v := range s.headers {
+//			req.Header.Set(k, v)
+//		}
+//	}
+	req.Header.Set("session", s.session)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := c.HTTPClient.Do(req)
 
-	defer resp.Body.Close()
-	// reading body
-	body, err := ioutil.ReadAll(resp.Body)
+	if (err != nil) {
+		log.Error("Failed to upload Mirage payload! ", err)
+	} else {
+		// request was successful but it actually doesn't mean that mirage payload is really there
+		// adding some logging for that purpose
+		if (resp.StatusCode == 201) {
+			log.Info("Mirage payload inserted!")
+		} else if (resp.StatusCode == 200) {
+			log.Info("Mirage payload updated!")
+		} else {
+			log.Info("Something happened, status code: ", resp.StatusCode)
+			// reading resposne body
+			defer resp.Body.Close()
+			body, _ := ioutil.ReadAll(resp.Body)
+			// pretty printing for debugging
+			b, _ := prettyprint(body)
+			fmt.Printf("%s", b)
+		}
+	}
 
-	return body, resp.StatusCode, err
 }
