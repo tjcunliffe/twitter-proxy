@@ -8,6 +8,35 @@ import (
 	"errors"
 )
 
+// contains is a structure to store multiple request matchers
+type contains struct {
+	Contains []string `json:contains`
+}
+
+// req structure holds original request to proxy structure which is a part of Mirage payload
+type req struct {
+	Method string `json:method`
+	BodyPatterns string `json:bodyPatterns`
+	Contains []contains `json:contains`
+	Headers map[string]string `json:headers`
+}
+
+// res structure hold response body from external service, body is not decoded and is supposed
+// to be bytes, however headers should provide all required information for later decoding
+// by the client.
+type res struct {
+	Status int `json:status`
+	Body []bytes `json:body`
+	Headers map[string]string `json:headers`
+}
+
+// Mirage structure holds whole payload that Mirage system will understand during request recording
+type Mirage struct {
+	Request req `json:request`
+	Response res `json:response`
+}
+
+
 type params struct {
 	url, body, method string
 	bodyBytes          []byte
