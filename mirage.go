@@ -4,7 +4,7 @@ import (
 	"net/http"
 	log "github.com/Sirupsen/logrus"
 	"io/ioutil"
-    "bytes"
+	"bytes"
 	"encoding/json"
 	"fmt"
 )
@@ -15,35 +15,34 @@ import (
 //}
 
 
-
 // req structure holds original request to proxy structure which is a part of Mirage payload
 // BodyPatterns usually holds "contains" key..
 type req struct {
-	Method string `json:method`
+	Method       string `json:method`
 	BodyPatterns []map[string][]string `json:bodyPatterns`
-	Headers map[string]string `json:headers`
+	Headers      map[string]string `json:headers`
 }
 
 // res structure hold response body from external service, body is not decoded and is supposed
 // to be bytes, however headers should provide all required information for later decoding
 // by the client.
 type res struct {
-	Status int `json:status`
-	Body []byte `json:body`
+	Status  int `json:status`
+	Body    []byte `json:body`
 	Headers map[string]string `json:headers`
 }
 
 // Mirage structure holds whole payload that Mirage system will understand during request recording
 type Mirage struct {
-	Request req `json:request`
+	Request  req `json:request`
 	Response res `json:response`
 }
 
 
 type params struct {
 	url, body, method string
-	bodyBytes          []byte
-	headers            map[string]string
+	bodyBytes         []byte
+	headers           map[string]string
 }
 
 // getBodyBytes is a helper method to read re
@@ -51,7 +50,7 @@ func getBodyBytes(req *http.Request) ([]byte, error) {
 	defer req.Body.Close()
 	// reading body
 	body, err := ioutil.ReadAll(req.Body)
-	if(err != nil) {
+	if (err != nil) {
 		log.WithFields(log.Fields{
 			"Error": err,
 		}).Error("Failed to read request body bytes and log error if there is one")
@@ -60,24 +59,33 @@ func getBodyBytes(req *http.Request) ([]byte, error) {
 }
 
 // getHeaders forms a map of headers from http request headers
-func getHeaders(req *http.Request) (map[string]string){
-	headers :=make(map[string]string)
-	for key, value := range req.Header{
+func getHeaders(req *http.Request) (map[string]string) {
+	headers := make(map[string]string)
+	for key, value := range req.Header {
 		headers[key] = value[0]
 	}
 	return headers
 }
 
+func getHeadersMap(hds map[string][]string) (map[string]string) {
+	headers := make(map[string]string)
+	for key, value := range hds {
+		headers[key] = value[0]
+	}
+	return headers
+}
+
+
 // createMiragePayload is used to create JSON payload that could be delivered to Mirage during record
-func createMiragePayload(matcher string, request *http.Request) (Mirage){
-    // defining payload
+func createMiragePayload(matcher string, request *http.Request, response *http.Response) (Mirage) {
+	// defining payload
 	var mirageObj Mirage
 
 	// formatting request part
-    // assigning headers
+	// assigning headers
 	headers := getHeaders(request)
 	mirageObj.Request.Headers = headers
-    // assigning request method
+	// assigning request method
 	mirageObj.Request.Method = request.Method
 	// getting contains matcher
 	bodyPatterns := make(map[string][]string)
@@ -86,6 +94,11 @@ func createMiragePayload(matcher string, request *http.Request) (Mirage){
 
 	// assigning matcher to body patterns
 	mirageObj.Request.BodyPatterns = []map[string][]string{bodyPatterns}
+
+	// formatting response part
+	mirageObj.Response.Status = response.StatusCode
+	// getting response headers
+    mirageObj.Response.Headers = getHeadersMap(response.Header)
 
 	return mirageObj
 
@@ -106,23 +119,23 @@ func prettyprint(b []byte) ([]byte, error) {
 // response - response from external system (in our case - twitter)
 func (c *Client) recordRequest(scenario, session, matcher string, request *http.Request, response *http.Response) () {
 
-	if(scenario != "" && session != "") {
+	if (scenario != "" && session != "") {
 		var s params
 
 		path := AppConfig.MirageEndpoint + "/stubo/api/v2/scenarios/objects/" + scenario + "/stubs"
 		s.url = path
 		s.method = "PUT"
 
-		miragePayload := createMiragePayload(matcher, request)
+		miragePayload := createMiragePayload(matcher, request, response)
 
 		bts, _ := json.Marshal(miragePayload)
 		b, _ := prettyprint(bts)
 		fmt.Printf("%s", b)
 
-	} else{
+	} else {
 		log.Error("Scenario or session not supplied.")
 	}
-    return
+	return
 }
 
 
