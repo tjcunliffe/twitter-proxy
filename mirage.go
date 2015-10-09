@@ -59,6 +59,14 @@ func getBodyBytes(req *http.Request) ([]byte, error) {
 	return body, err
 }
 
+// getHeaders forms a map of headers from http request headers
+func getHeaders(req *http.Request) (map[string]string){
+	headers :=make(map[string]string)
+	for key, value := range req.Header{
+		headers[key] = value[0]
+	}
+	return headers
+}
 
 
 	if session, ok := headers["session"]; ok {
