@@ -68,10 +68,28 @@ func getHeaders(req *http.Request) (map[string]string){
 	return headers
 }
 
+// createMiragePayload is used to create JSON payload that could be delivered to Mirage during record
+func createMiragePayload(matcher string, request *http.Request) (Mirage){
+    // defining payload
+	var mirageObj Mirage
 
-	if session, ok := headers["session"]; ok {
-		if scenario != "" && session != "" {
-			var s params
+	// formatting request part
+    // assigning headers
+	headers := getHeaders(request)
+	mirageObj.Request.Headers = headers
+    // assigning request method
+	mirageObj.Request.Method = request.Method
+	// getting contains matcher
+	bodyPatterns := make(map[string][]string)
+	matchers := []string{matcher}
+	bodyPatterns["contains"] = matchers
+
+	// assigning matcher to body patterns
+	mirageObj.Request.BodyPatterns = []map[string][]string{bodyPatterns}
+
+	return mirageObj
+
+}
 
 			path := AppConfig.MirageEndpoint + "/stubo/api/v2/scenarios/objects/" + scenario + "/stubs?" + args
 
