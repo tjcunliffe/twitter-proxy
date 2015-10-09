@@ -29,7 +29,7 @@ type req struct {
 // by the client.
 type res struct {
 	Status int `json:status`
-	Body []bytes `json:body`
+	Body []byte `json:body`
 	Headers map[string]string `json:headers`
 }
 
