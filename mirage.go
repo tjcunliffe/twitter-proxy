@@ -5,19 +5,22 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"io/ioutil"
     "bytes"
-	"errors"
+	"encoding/json"
+	"fmt"
 )
 
 // contains is a structure to store multiple request matchers
-type contains struct {
-	Contains []string `json:contains`
-}
+//type contains struct {
+//	Contains []string `json:contains`
+//}
+
+
 
 // req structure holds original request to proxy structure which is a part of Mirage payload
+// BodyPatterns usually holds "contains" key..
 type req struct {
 	Method string `json:method`
-	BodyPatterns string `json:bodyPatterns`
-	Contains []contains `json:contains`
+	BodyPatterns []map[string][]string `json:bodyPatterns`
 	Headers map[string]string `json:headers`
 }
 
