@@ -44,19 +44,19 @@ type params struct {
 	bodyBytes         []byte
 	headers           map[string]string
 }
-
-// getBodyBytes is a helper method to read re
-func getBodyBytes(req *http.Request) ([]byte, error) {
-	defer req.Body.Close()
-	// reading body
-	body, err := ioutil.ReadAll(req.Body)
-	if (err != nil) {
-		log.WithFields(log.Fields{
-			"Error": err,
-		}).Error("Failed to read request body bytes and log error if there is one")
-	}
-	return body, err
-}
+//
+//// getBodyBytes is a helper method to read re
+//func getBodyBytes(req i) ([]byte, error) {
+//	defer req.Body.Close()
+//	// reading body
+//	body, err := ioutil.ReadAll(req.Body)
+//	if (err != nil) {
+//		log.WithFields(log.Fields{
+//			"Error": err,
+//		}).Error("Failed to read request body bytes and log error if there is one")
+//	}
+//	return body, err
+//}
 
 // getHeaders forms a map of headers from http request headers
 func getHeaders(req *http.Request) (map[string]string) {
@@ -77,7 +77,7 @@ func getHeadersMap(hds map[string][]string) (map[string]string) {
 
 
 // createMiragePayload is used to create JSON payload that could be delivered to Mirage during record
-func createMiragePayload(matcher string, request *http.Request, response *http.Response) (Mirage) {
+func createMiragePayload(matcher string, request *http.Request, response *http.Response, body []byte) (Mirage) {
 	// defining payload
 	var mirageObj Mirage
 
@@ -99,6 +99,8 @@ func createMiragePayload(matcher string, request *http.Request, response *http.R
 	mirageObj.Response.Status = response.StatusCode
 	// getting response headers
     mirageObj.Response.Headers = getHeadersMap(response.Header)
+	// adding external service response body
+	mirageObj.Response.Body = body
 
 	return mirageObj
 
@@ -117,7 +119,7 @@ func prettyprint(b []byte) ([]byte, error) {
 // matcher - matcher is a parameter that will be the key for retrieving response during playback
 // request - request from client (system under test)
 // response - response from external system (in our case - twitter)
-func (c *Client) recordRequest(scenario, session, matcher string, request *http.Request, response *http.Response) () {
+func (c *Client) recordRequest(scenario, session, matcher string, request *http.Request, response *http.Response, body []byte) () {
 
 	if (scenario != "" && session != "") {
 		var s params
@@ -126,7 +128,7 @@ func (c *Client) recordRequest(scenario, session, matcher string, request *http.
 		s.url = path
 		s.method = "PUT"
 
-		miragePayload := createMiragePayload(matcher, request, response)
+		miragePayload := createMiragePayload(matcher, request, response, body)
 
 		bts, _ := json.Marshal(miragePayload)
 		b, _ := prettyprint(bts)

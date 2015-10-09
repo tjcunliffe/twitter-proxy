@@ -68,13 +68,16 @@ func (h HTTPClientHandler) tweetSearchEndpoint(w http.ResponseWriter, r *http.Re
 		if err != nil {
 			log.Error("Failed to get response!", err)
 		}
-		// recording request to mirage
-		go h.http.recordRequest(scenario, session, queryString[0], r, resp)
 
-		// returning original response back to client app (system under test)
 		defer resp.Body.Close()
 		// reading body
 		body, err := ioutil.ReadAll(resp.Body)
+
+		// recording request to mirage
+		go h.http.recordRequest(scenario, session, queryString[0], r, resp, body)
+
+		// returning original response back to client app (system under test)
+
 
 		if err != nil {
 			log.Error("Failed to read response body", err)
