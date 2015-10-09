@@ -46,8 +46,18 @@ type params struct {
 	headers            map[string]string
 }
 
-// putStub transparently passes request body to Mirage
-func (c *Client) putStub(scenario, session, args string, body []byte, headers map[string]string) ([]byte, int, error) {
+// getBodyBytes is a helper method to read re
+func getBodyBytes(req *http.Request) ([]byte, error) {
+	defer req.Body.Close()
+	// reading body
+	body, err := ioutil.ReadAll(req.Body)
+	if(err != nil) {
+		log.WithFields(log.Fields{
+			"Error": err,
+		}).Error("Failed to read request body bytes and log error if there is one")
+	}
+	return body, err
+}
 
 
 
