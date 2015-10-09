@@ -102,7 +102,9 @@ func prettyprint(b []byte) ([]byte, error) {
 // scenario - scenario name, usually you have to create scenario manually
 // session - session name should be in "Record" mode for a recording to be successful
 // matcher - matcher is a parameter that will be the key for retrieving response during playback
-func (c *Client) recordRequest(scenario, session, matcher string, request *http.Request) () {
+// request - request from client (system under test)
+// response - response from external system (in our case - twitter)
+func (c *Client) recordRequest(scenario, session, matcher string, request *http.Request, response *http.Response) () {
 
 	if(scenario != "" && session != "") {
 		var s params

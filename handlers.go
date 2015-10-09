@@ -69,7 +69,7 @@ func (h HTTPClientHandler) tweetSearchEndpoint(w http.ResponseWriter, r *http.Re
 			log.Error("Failed to get response!", err)
 		}
 		// recording request to mirage
-		go h.http.recordRequest(scenario, session, queryString[0], r)
+		go h.http.recordRequest(scenario, session, queryString[0], r, resp)
 
 		// returning original response back to client app (system under test)
 		defer resp.Body.Close()
