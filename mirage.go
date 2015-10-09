@@ -12,24 +12,24 @@ import (
 // req structure holds original request to proxy structure which is a part of Mirage payload
 // BodyPatterns usually holds "contains" key..
 type req struct {
-	Method       string `json:method`
-	BodyPatterns []map[string][]string `json:bodyPatterns`
-	Headers      map[string]string `json:headers`
+	Method       string `json:"method"`
+	BodyPatterns []map[string][]string `json:"bodyPatterns"`
+	Headers      map[string]string `json:"headers"`
 }
 
 // res structure hold response body from external service, body is not decoded and is supposed
 // to be bytes, however headers should provide all required information for later decoding
 // by the client.
 type res struct {
-	Status  int `json:status`
-	Body    []byte `json:body`
-	Headers map[string]string `json:headers`
+	Status  int `json:"status"`
+	Body    []byte `json:"body"`
+	Headers map[string]string `json:"headers"`
 }
 
 // Mirage structure holds whole payload that Mirage system will understand during request recording
 type Mirage struct {
-	Request  req `json:request`
-	Response res `json:response`
+	Request  req `json:"request"`
+	Response res `json:"response"`
 }
 
 // params structure holds information about request to Mirage formation
