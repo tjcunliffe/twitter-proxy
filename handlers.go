@@ -89,5 +89,14 @@ func (h HTTPClientHandler) tweetSearchEndpoint(w http.ResponseWriter, r *http.Re
 			w.Header().Set(k, v[0])
 		}
 		w.Write(body)
+	} else {
+		// playback time!!
+        log.Info("PLAYBACK MODE")
+		data := h.http.playbackResponse(scenario, session, queryString[0])
+		for k, v := range data.Headers {
+			w.Header().Set(k, v)
+		}
+		w.WriteHeader(data.StatusCode)
+		w.Write(data.Body)
 	}
 }
