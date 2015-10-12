@@ -129,6 +129,39 @@ func (c *Client) recordRequest(scenario, session, matcher string, request *http.
 	return
 }
 
+func (c *Client) playbackResponse(scenario, session, matcher string) (MirageResponse){
+	var data MirageResponse
+	if (scenario != "" && session != "") {
+		mirageMatcherEndpoint := AppConfig.MirageEndpoint + "/api/v2/matcher"
+
+
+		req, err := http.NewRequest("POST", mirageMatcherEndpoint, bytes.NewBuffer([]byte(matcher)))
+		if(err != nil) {
+			log.Error(err)
+		}
+		req.Header.Add("session", fmt.Sprintf("%s:%s", scenario, session))
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err := c.HTTPClient.Do(req)
+
+		// reading mirage response
+		defer resp.Body.Close()
+		mrgResponseBytes, _ := ioutil.ReadAll(resp.Body)
+
+
+
+		err = json.Unmarshal(mrgResponseBytes, &data)
+		if(err != nil) {
+			log.Error(err)
+		}
+
+		return data
+
+	} else {
+		log.Error("Scenario or session not supplied during playback, can't send response")
+        return data
+	}
+}
 
 
 // makeRequest takes Params struct as parameters and makes request to Mirage
