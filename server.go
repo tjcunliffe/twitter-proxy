@@ -72,7 +72,7 @@ func main() {
 	h := HTTPClientHandler{http: Client{&http.Client{}}, r: r}
 
 	// getting current state. This should probably come from cache
-	Record = true
+	Record = false
 
 	mux := getBoneRouter(h)
 	n := negroni.Classic()
