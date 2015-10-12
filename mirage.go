@@ -32,6 +32,12 @@ type Mirage struct {
 	Response res `json:"response"`
 }
 
+type MirageResponse struct {
+	Body []byte `json:"body"`
+	StatusCode int `json:"statusCode"`
+	Headers map[string]string `json:"headers"`
+}
+
 // params structure holds information about request to Mirage formation
 type params struct {
 	url, session, method string
