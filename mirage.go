@@ -70,10 +70,11 @@ func createMiragePayload(matcher string, request *http.Request, response *http.R
 
 	// formatting request part
 	// assigning headers
-	headers := getHeaders(request)
-	mirageObj.Request.Headers = headers
+	// headers := getHeaders(request)
+	// mirageObj.Request.Headers = headers
 	// assigning request method
-	mirageObj.Request.Method = request.Method
+//	mirageObj.Request.Method = request.Method
+	mirageObj.Request.Method = "POST"
 	// getting contains matcher
 	bodyPatterns := make(map[string][]string)
 	matchers := []string{matcher}
@@ -88,6 +89,10 @@ func createMiragePayload(matcher string, request *http.Request, response *http.R
 	mirageObj.Response.Headers = getHeadersMap(response.Header)
 	// adding external service response body
 	mirageObj.Response.Body = body
+	log.WithFields(log.Fields{
+		"content-length": len(body),
+	}).Info("Original response body length")
+
 
 	return mirageObj
 
@@ -179,6 +184,7 @@ func (c *Client) makeRequest(s params) () {
 		"session":       s.session,
 		"headers":       s.headers,
 		"requestMethod": s.method,
+		"content-length": len(s.bodyBytes),
 	}).Info("Transforming URL, preparing for request to Mirage")
 
 	req, err := http.NewRequest(s.method, s.url, bytes.NewBuffer(s.bodyBytes))
@@ -205,5 +211,4 @@ func (c *Client) makeRequest(s params) () {
 			fmt.Printf("%s", b)
 		}
 	}
-
 }
