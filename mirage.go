@@ -14,7 +14,7 @@ import (
 type req struct {
 	Method       string `json:"method"`
 	BodyPatterns []map[string][]string `json:"bodyPatterns"`
-	Headers      map[string]string `json:"headers"`
+	Headers      map[string]string `json:"headers,omitempty"`
 }
 
 // res structure hold response body from external service, body is not decoded and is supposed
