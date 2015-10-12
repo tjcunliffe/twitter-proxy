@@ -140,14 +140,9 @@ func (c *Client) makeRequest(s params) () {
 		"session":       s.session,
 		"headers":       s.headers,
 		"requestMethod": s.method,
-	}).Info("Transforming URL, preparing for request to MIrage")
+	}).Info("Transforming URL, preparing for request to Mirage")
 
 	req, err := http.NewRequest(s.method, s.url, bytes.NewBuffer(s.bodyBytes))
-//	if s.headers != nil {
-//		for k, v := range s.headers {
-//			req.Header.Set(k, v)
-//		}
-//	}
 	req.Header.Set("session", s.session)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := c.HTTPClient.Do(req)
