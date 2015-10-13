@@ -54,6 +54,35 @@
 
 	var _reactBootstrap = __webpack_require__(157);
 
+	var _reactDom = __webpack_require__(397);
+
+	var _reactDom2 = _interopRequireDefault(_reactDom);
+
+	var updateComponent = function updateComponent(that, data) {
+	    if (that.isMounted()) {
+
+	        var style = "";
+	        var caption = "";
+
+	        if (data.record) {
+	            // recording
+	            style = "warning";
+	            caption = "Recording";
+	        } else {
+	            // playback
+	            style = "success";
+	            caption = "Playback";
+	        }
+
+	        that.setState({
+	            record: data.record,
+	            disabled: false,
+	            style: style,
+	            caption: caption
+	        });
+	    }
+	};
+
 	var RecordToolbarComponent = _react2['default'].createClass({
 	    displayName: 'RecordToolbarComponent',
 
@@ -68,46 +97,25 @@
 	    },
 
 	    componentDidMount: function componentDidMount() {
-
 	        var that = this;
-
 	        $.ajax({
 	            type: "GET",
 	            dataType: "json",
 	            url: this.state.url,
 	            success: function success(data) {
-	                console.log(data);
-
-	                if (that.isMounted()) {
-
-	                    var style = "";
-	                    var caption = "";
-
-	                    if (data.record) {
-	                        // recording
-	                        style = "warning";
-	                        caption = "Recording";
-	                    } else {
-	                        // playback
-	                        style = "success";
-	                        caption = "Playback";
-	                    }
-
-	                    that.setState({
-	                        record: data.record,
-	                        disabled: false,
-	                        style: style,
-	                        caption: caption
-	                    });
-	                }
+	                updateComponent(that, data);
 	            }
 	        });
+	    },
+
+	    handleClick: function handleClick() {
+	        console.log(clicked);
 	    },
 
 	    render: function render() {
 	        return _react2['default'].createElement(
 	            _reactBootstrap.Button,
-	            { bsStyle: this.state.style },
+	            { onClick: this.handleClick, bsStyle: this.state.style },
 	            ' ',
 	            this.state.caption,
 	            ' '
@@ -116,7 +124,7 @@
 
 	});
 
-	_react2['default'].render(_react2['default'].createElement(RecordToolbarComponent, null), document.getElementById("app"));
+	_reactDom2['default'].render(_react2['default'].createElement(RecordToolbarComponent, null), document.getElementById("app"));
 
 /***/ },
 /* 1 */
@@ -35322,6 +35330,14 @@
 
 	exports['default'] = Well;
 	module.exports = exports['default'];
+
+/***/ },
+/* 397 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	module.exports = __webpack_require__(3);
 
 /***/ }
 /******/ ]);
