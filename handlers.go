@@ -122,4 +122,23 @@ func (h HTTPClientHandler) getCurrentState() (bool) {
 	}
 }
 
+// setState sets new state for proxy inside redis
+func (h HTTPClientHandler) setState(newState bool) (error) {
+	c := h.pool.Get()
+	defer c.Close()
+
+	status, err := c.Do("SET", "twproxy", newState)
+
+	if err != nil {
+		log.WithFields(log.Fields{
+			"requiredState": newState,
+		}).Error("Failed to update proxy state...")
+		return err
+	} else {
+		log.WithFields(log.Fields{
+			"requiredState": newState,
+			"status": status,
+		}).Info("State updated!")
+		return nil
+	}
 }
