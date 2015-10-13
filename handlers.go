@@ -109,6 +109,35 @@ func (h HTTPClientHandler) adminHandler(w http.ResponseWriter, r *http.Request) 
 	h.r.HTML(w, http.StatusOK, "adminHome", nil)
 }
 
+func (h HTTPClientHandler) stateHandler(w http.ResponseWriter, r *http.Request) {
+	var stateRequest StateRequest
+
+	defer r.Body.Close()
+	body, err := ioutil.ReadAll(r.Body)
+
+	if err := json.Unmarshal(body, &stateRequest); err != nil {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		w.WriteHeader(422) // can' process this entity
+
+		if err := json.NewEncoder(w).Encode(err); err != nil {
+			panic(err)
+		}
+	}
+	log.WithFields(log.Fields{
+		"newState": stateRequest.record,
+		"body": string(body),
+	}).Info("Handling state change request!")
+	// setting state to redis
+	err = h.setState(stateRequest.record)
+	if(err != nil){
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		w.WriteHeader(400) // failed to change it
+	} else {
+		w.WriteHeader(200)
+	}
+
+}
+
 // getCurrentState returns current proxy state (record is default one since if Mirage is not around it will get response
 // from external service and return it to the client
 func (h HTTPClientHandler) getCurrentState() (bool) {
