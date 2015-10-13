@@ -127,21 +127,30 @@ func (h HTTPClientHandler) stateHandler(w http.ResponseWriter, r *http.Request) 
 	defer r.Body.Close()
 	body, err := ioutil.ReadAll(r.Body)
 
-	if err := json.Unmarshal(body, &stateRequest); err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.WriteHeader(422) // can' process this entity
+	if(err != nil){
+		// failed to read response body
+		log.WithFields(log.Fields{
+			"error": err.Error(),
+		}).Error("Could not read response body!")
+		http.Error(w, "Scenario name not provided.", 400)
+		return
+	}
 
-		if err := json.NewEncoder(w).Encode(err); err != nil {
-			panic(err)
-		}
+	err = json.Unmarshal(body, &stateRequest)
+
+	if (err != nil) {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		w.WriteHeader(422) // can't process this entity
+		return
 	}
 	log.WithFields(log.Fields{
-		"newState": stateRequest.record,
+		"newState": stateRequest.Record,
 		"body": string(body),
 	}).Info("Handling state change request!")
+
 	// setting state to redis
-	err = h.setState(stateRequest.record)
-	if(err != nil){
+	err = h.setState(stateRequest.Record)
+	if (err != nil) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		w.WriteHeader(400) // failed to change it
 	} else {
