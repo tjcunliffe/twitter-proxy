@@ -78,6 +78,7 @@ func main() {
 		c, err := redis.Dial("tcp", *redisAddress)
 
 		if err != nil {
+			log.WithFields(log.Fields{"Error": err.Error()}).Panic("Failed to create Redis connection pool!")
 			return nil, err
 		}
 
@@ -99,6 +100,8 @@ func main() {
 func getBoneRouter(h HTTPClientHandler) *bone.Mux {
 	mux := bone.New()
 	mux.Get("/1.1/search/tweets.json", http.HandlerFunc(h.tweetSearchEndpoint))
+	mux.Get("/admin", http.HandlerFunc(h.adminHandler))
+	mux.Post("/admin/state", http.HandlerFunc(h.stateHandler))
 	// handling static files
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
