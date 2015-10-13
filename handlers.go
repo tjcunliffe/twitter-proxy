@@ -105,6 +105,10 @@ func (h HTTPClientHandler) tweetSearchEndpoint(w http.ResponseWriter, r *http.Re
 	}
 }
 
+func (h HTTPClientHandler) adminHandler(w http.ResponseWriter, r *http.Request) {
+	h.r.HTML(w, http.StatusOK, "adminHome", nil)
+}
+
 // getCurrentState returns current proxy state (record is default one since if Mirage is not around it will get response
 // from external service and return it to the client
 func (h HTTPClientHandler) getCurrentState() (bool) {
