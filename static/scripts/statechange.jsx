@@ -1,29 +1,34 @@
 import React from 'react'
-import { Button, ButtonToolbar } from 'react-bootstrap'
+import { Button, ButtonToolbar, Tooltip, OverlayTrigger } from 'react-bootstrap'
 import ReactDOM from 'react-dom'
 
 
-const updateComponent = function(that, data) {
+const updateComponent = function (that, data) {
     if (that.isMounted()) {
 
         let style = "";
         let caption = "";
+        let tooltip = "";
 
-        if(data.record) {
+        if (data.record) {
             // recording
             style = "warning";
-            caption = "Recording"
+            caption = "Recording";
+            tooltip = "Proxy is currently in record mode. Press this button to start playback."
+
         } else {
             // playback
             style = "success";
-            caption = "Playback"
+            caption = "Playback";
+            tooltip = "Proxy is currently in playback mode. Press this button to start recording."
         }
 
         that.setState({
             record: data.record,
             disabled: false,
             style: style,
-            caption: caption
+            caption: caption,
+            tooltipMessage: tooltip
         });
     }
 };
@@ -35,7 +40,8 @@ const RecordToolbarComponent = React.createClass({
             record: true,
             style: "warning",
             caption: "recording",
-            url: "/admin/state"
+            url: "/admin/state",
+            tooltipMessage: ""
         }
     },
 
@@ -69,7 +75,15 @@ const RecordToolbarComponent = React.createClass({
     },
 
     render() {
-        return <Button onClick={this.handleClick} bsStyle={this.state.style}> {this.state.caption} </Button>
+        const tooltip = (
+            <Tooltip>{this.state.tooltipMessage}</Tooltip>
+        );
+
+        return (
+            <OverlayTrigger placement='right' overlay={tooltip}>
+                <Button onClick={this.handleClick} bsStyle={this.state.style}> {this.state.caption} </Button>
+            </OverlayTrigger>
+        )
     }
 
 });

@@ -63,22 +63,26 @@
 
 	        var style = "";
 	        var caption = "";
+	        var tooltip = "";
 
 	        if (data.record) {
 	            // recording
 	            style = "warning";
 	            caption = "Recording";
+	            tooltip = "Proxy is currently in record mode. Press this button to start playback.";
 	        } else {
 	            // playback
 	            style = "success";
 	            caption = "Playback";
+	            tooltip = "Proxy is currently in playback mode. Press this button to start recording.";
 	        }
 
 	        that.setState({
 	            record: data.record,
 	            disabled: false,
 	            style: style,
-	            caption: caption
+	            caption: caption,
+	            tooltipMessage: tooltip
 	        });
 	    }
 	};
@@ -92,7 +96,8 @@
 	            record: true,
 	            style: "warning",
 	            caption: "recording",
-	            url: "/admin/state"
+	            url: "/admin/state",
+	            tooltipMessage: ""
 	        };
 	    },
 
@@ -125,12 +130,22 @@
 	    },
 
 	    render: function render() {
+	        var tooltip = _react2['default'].createElement(
+	            _reactBootstrap.Tooltip,
+	            null,
+	            this.state.tooltipMessage
+	        );
+
 	        return _react2['default'].createElement(
-	            _reactBootstrap.Button,
-	            { onClick: this.handleClick, bsStyle: this.state.style },
-	            ' ',
-	            this.state.caption,
-	            ' '
+	            _reactBootstrap.OverlayTrigger,
+	            { placement: 'right', overlay: tooltip },
+	            _react2['default'].createElement(
+	                _reactBootstrap.Button,
+	                { onClick: this.handleClick, bsStyle: this.state.style },
+	                ' ',
+	                this.state.caption,
+	                ' '
+	            )
 	        );
 	    }
 
