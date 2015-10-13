@@ -1,10 +1,13 @@
 package main
+
+
 import (
 	"net/http"
 	log "github.com/Sirupsen/logrus"
 	"io/ioutil"
-    "strings"
+	"strings"
 	"github.com/garyburd/redigo/redis"
+	"encoding/json"
 )
 
 type StateRequest struct {
@@ -74,7 +77,7 @@ func (h HTTPClientHandler) tweetSearchEndpoint(w http.ResponseWriter, r *http.Re
 			// adding key/value pairs
 			req.Header.Add(k, v[0])
 		}
-        // performing request
+		// performing request
 		resp, err := client.Do(req)
 
 		if err != nil {
@@ -103,7 +106,7 @@ func (h HTTPClientHandler) tweetSearchEndpoint(w http.ResponseWriter, r *http.Re
 		w.Write(body)
 	} else {
 		// playback time!!
-        log.Info("PLAYBACK MODE")
+		log.Info("PLAYBACK MODE")
 		data := h.http.playbackResponse(scenario, session, queryString[0])
 		for k, v := range data.Headers {
 			w.Header().Set(k, v)
@@ -164,7 +167,7 @@ func (h HTTPClientHandler) getCurrentState() (bool) {
 		log.WithFields(log.Fields{
 			"state": state,
 		}).Info("Proxy configuration found in Redis...")
-	    return state
+		return state
 	}
 }
 
@@ -177,12 +180,12 @@ func (h HTTPClientHandler) setState(newState bool) (error) {
 
 	if err != nil {
 		log.WithFields(log.Fields{
-			"requiredState": newState,
+			"record": newState,
 		}).Error("Failed to update proxy state...")
 		return err
 	} else {
 		log.WithFields(log.Fields{
-			"requiredState": newState,
+			"record": newState,
 			"status": status,
 		}).Info("State updated!")
 		return nil
