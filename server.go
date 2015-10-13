@@ -86,14 +86,6 @@ func main() {
 
 	defer redisPool.Close()
 
-
-
-//	redisClient, err := redis.Dial("tcp", ":6379")
-//	if err != nil {
-//		log.WithFields(log.Fields{
-//			"Error": err.Error()}).Error("Failed to connect to Redis, state switching might be available")
-//	}
-
 	h := HTTPClientHandler{http: Client{&http.Client{}}, r: r, pool: redisPool}
 
 	mux := getBoneRouter(h)
