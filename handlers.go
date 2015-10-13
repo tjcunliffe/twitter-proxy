@@ -7,6 +7,14 @@ import (
 	"github.com/garyburd/redigo/redis"
 )
 
+type StateRequest struct {
+	record bool `json:"record"`
+}
+
+type StateResponse struct {
+	newState bool `json:"newState"`
+}
+
 func (h HTTPClientHandler) tweetSearchEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	mirageSession := r.Header.Get("MirageScenarioSession")
