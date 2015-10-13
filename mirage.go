@@ -14,7 +14,7 @@ import (
 type req struct {
 	Method       string `json:"method"`
 	BodyPatterns []map[string][]string `json:"bodyPatterns"`
-	Headers      map[string]string `json:"headers"`
+	Headers      map[string]string `json:"headers,omitempty"`
 }
 
 // res structure hold response body from external service, body is not decoded and is supposed
@@ -32,6 +32,12 @@ type Mirage struct {
 	Response res `json:"response"`
 }
 
+type MirageResponse struct {
+	Body       []byte `json:"body"`
+	StatusCode int `json:"statusCode"`
+	Headers    map[string]string `json:"headers"`
+}
+
 // params structure holds information about request to Mirage formation
 type params struct {
 	url, session, method string
@@ -39,15 +45,7 @@ type params struct {
 	headers              map[string]string
 }
 
-// getHeaders forms a map of headers from http request headers
-func getHeaders(req *http.Request) (map[string]string) {
-	headers := make(map[string]string)
-	for key, value := range req.Header {
-		headers[key] = value[0]
-	}
-	return headers
-}
-
+// getHeadersMap converts map[string][]string to map[string]string structure
 func getHeadersMap(hds map[string][]string) (map[string]string) {
 	headers := make(map[string]string)
 	for key, value := range hds {
@@ -64,10 +62,11 @@ func createMiragePayload(matcher string, request *http.Request, response *http.R
 
 	// formatting request part
 	// assigning headers
-	headers := getHeaders(request)
-	mirageObj.Request.Headers = headers
+	// headers := getHeaders(request)
+	// mirageObj.Request.Headers = headers
 	// assigning request method
-	mirageObj.Request.Method = request.Method
+	//	mirageObj.Request.Method = request.Method
+	mirageObj.Request.Method = "POST"
 	// getting contains matcher
 	bodyPatterns := make(map[string][]string)
 	matchers := []string{matcher}
@@ -82,6 +81,10 @@ func createMiragePayload(matcher string, request *http.Request, response *http.R
 	mirageObj.Response.Headers = getHeadersMap(response.Header)
 	// adding external service response body
 	mirageObj.Response.Body = body
+	log.WithFields(log.Fields{
+		"content-length": len(body),
+	}).Info("Original response body length")
+
 
 	return mirageObj
 
@@ -118,10 +121,14 @@ func (c *Client) recordRequest(scenario, session, matcher string, request *http.
 
 		// pretty printing for debugging
 		b, _ := prettyprint(bts)
-		fmt.Printf("%s", b)
+
+		log.WithFields(log.Fields{
+			"Request": b,
+
+		}).Debug("Mirage payload")
 
 		// uploading payload to Mirage
-        c.makeRequest(s)
+		c.makeRequest(s)
 
 	} else {
 		log.Error("Scenario or session not supplied.")
@@ -129,17 +136,53 @@ func (c *Client) recordRequest(scenario, session, matcher string, request *http.
 	return
 }
 
+// playbackResponse gets response form Mirage and returns all necessary data to recreate original response from
+// external service
+func (c *Client) playbackResponse(scenario, session, matcher string) (MirageResponse) {
+	var data MirageResponse
+	if (scenario != "" && session != "") {
+		mirageMatcherEndpoint := AppConfig.MirageEndpoint + "/api/v2/matcher"
+
+
+		req, err := http.NewRequest("POST", mirageMatcherEndpoint, bytes.NewBuffer([]byte(matcher)))
+		if (err != nil) {
+			log.Error(err)
+		}
+		req.Header.Add("session", fmt.Sprintf("%s:%s", scenario, session))
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err := c.HTTPClient.Do(req)
+
+		// reading mirage response
+		defer resp.Body.Close()
+		mrgResponseBytes, _ := ioutil.ReadAll(resp.Body)
+
+
+
+		err = json.Unmarshal(mrgResponseBytes, &data)
+		if (err != nil) {
+			log.Error(err)
+		}
+
+		return data
+
+	} else {
+		log.Error("Scenario or session not supplied during playback, can't send response")
+		return data
+	}
+}
 
 
 // makeRequest takes Params struct as parameters and makes request to Mirage
 // then gets response bytes and returns to caller
-func (c *Client) makeRequest(s params) () {
+func (c *Client) makeRequest(s params) {
 
 	log.WithFields(log.Fields{
 		"url":           s.url,
 		"session":       s.session,
 		"headers":       s.headers,
 		"requestMethod": s.method,
+		"content-length": len(s.bodyBytes),
 	}).Info("Transforming URL, preparing for request to Mirage")
 
 	req, err := http.NewRequest(s.method, s.url, bytes.NewBuffer(s.bodyBytes))
@@ -166,5 +209,5 @@ func (c *Client) makeRequest(s params) () {
 			fmt.Printf("%s", b)
 		}
 	}
-
 }
+
