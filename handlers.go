@@ -10,12 +10,13 @@ import (
 	"encoding/json"
 )
 
+// StateRequest
 type StateRequest struct {
-	record bool `json:"record"`
+	Record bool `json:"record"`
 }
 
 type StateResponse struct {
-	newState bool `json:"newState"`
+	Status string `json:"status"`
 }
 
 func (h HTTPClientHandler) tweetSearchEndpoint(w http.ResponseWriter, r *http.Request) {
