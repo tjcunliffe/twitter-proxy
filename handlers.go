@@ -150,6 +150,18 @@ func (h HTTPClientHandler) stateHandler(w http.ResponseWriter, r *http.Request) 
 
 }
 
+func (h HTTPClientHandler) getStateHandler(w http.ResponseWriter, r *http.Request) {
+    // getting current state
+	record := h.getCurrentState()
+
+	var resp StateRequest
+	resp.Record = record
+
+	b, _ := json.Marshal(resp)
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Write(b)
+}
+
 // getCurrentState returns current proxy state (record is default one since if Mirage is not around it will get response
 // from external service and return it to the client
 func (h HTTPClientHandler) getCurrentState() (bool) {
