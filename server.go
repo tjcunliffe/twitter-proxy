@@ -102,6 +102,7 @@ func getBoneRouter(h HTTPClientHandler) *bone.Mux {
 	mux.Get("/1.1/search/tweets.json", http.HandlerFunc(h.tweetSearchEndpoint))
 	mux.Get("/admin", http.HandlerFunc(h.adminHandler))
 	mux.Post("/admin/state", http.HandlerFunc(h.stateHandler))
+	mux.Get("/admin/state", http.HandlerFunc(h.getStateHandler))
 	// handling static files
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
