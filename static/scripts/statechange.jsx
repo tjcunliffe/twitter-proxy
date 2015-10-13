@@ -52,7 +52,19 @@ const RecordToolbarComponent = React.createClass({
     },
 
     handleClick() {
-        console.log(clicked)
+        var body = {
+            record: !this.state.record
+        };
+        let that = this;
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            url: this.state.url,
+            data: JSON.stringify(body),
+            success: function (data) {
+                updateComponent(that, data)
+            }
+        });
 
     },
 

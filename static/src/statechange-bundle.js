@@ -109,7 +109,19 @@
 	    },
 
 	    handleClick: function handleClick() {
-	        console.log(clicked);
+	        var body = {
+	            record: !this.state.record
+	        };
+	        var that = this;
+	        $.ajax({
+	            type: "POST",
+	            dataType: "json",
+	            url: this.state.url,
+	            data: JSON.stringify(body),
+	            success: function success(data) {
+	                updateComponent(that, data);
+	            }
+	        });
 	    },
 
 	    render: function render() {
