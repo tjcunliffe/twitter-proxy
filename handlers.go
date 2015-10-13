@@ -154,7 +154,12 @@ func (h HTTPClientHandler) stateHandler(w http.ResponseWriter, r *http.Request) 
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		w.WriteHeader(400) // failed to change it
 	} else {
-		w.WriteHeader(200)
+		var resp StateRequest
+		resp.Record = stateRequest.Record
+		b, _ := json.Marshal(resp)
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		w.Write(b)
+
 	}
 
 }
