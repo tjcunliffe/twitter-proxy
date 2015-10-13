@@ -11,6 +11,7 @@ import (
 	"github.com/unrolled/render"
 	"github.com/meatballhat/negroni-logrus"
 	"github.com/go-zoo/bone"
+    "github.com/garyburd/redigo/redis"
 )
 
 // Initial structure of configuration that is expected from conf.json file
@@ -32,10 +33,13 @@ type Client struct {
 type HTTPClientHandler struct {
 	http Client
 	r  *render.Render
+	pool *redis.Pool
 }
 
-// Mode stores information about proxy's current state record/playback
-var Record bool
+var (
+	redisAddress   = flag.String("redis-address", ":6379", "Address to the Redis server")
+	maxConnections = flag.Int("max-connections", 10, "Max connections to Redis")
+)
 
 func main() {
 	// Output to stderr instead of stdout, could also be a file.
