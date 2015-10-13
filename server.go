@@ -11,6 +11,7 @@ import (
 	"github.com/unrolled/render"
 	"github.com/meatballhat/negroni-logrus"
 	"github.com/go-zoo/bone"
+    "github.com/garyburd/redigo/redis"
 )
 
 // Initial structure of configuration that is expected from conf.json file
@@ -32,10 +33,15 @@ type Client struct {
 type HTTPClientHandler struct {
 	http Client
 	r  *render.Render
+	pool *redis.Pool
 }
 
-// Mode stores information about proxy's current state record/playback
-var Record bool
+var (
+	redisAddress   = flag.String("redis-address", ":6379", "Address to the Redis server")
+	maxConnections = flag.Int("max-connections", 10, "Max connections to Redis")
+	// like ./twitter-proxy -port=":8080" would start on port 8080
+	port = flag.String("port", ":8300", "Server port")
+)
 
 func main() {
 	// Output to stderr instead of stdout, could also be a file.
@@ -61,18 +67,26 @@ func main() {
 		"ExternalSystemEndpoint": AppConfig.ExternalSystem,
 	}).Info("app is starting")
 
-	// looking for option args when starting App
-	// like ./twitter-app -port=":8080" would start on port 8080
-	var port = flag.String("port", ":8300", "Server port")
-	flag.Parse() // parse the flag
+	flag.Parse() // parse the flags
 
 	// getting base template and handler struct
 	r := render.New(render.Options{Layout: "layout"})
 
-	h := HTTPClientHandler{http: Client{&http.Client{}}, r: r}
+	// getting redis client for state storing
+	redisPool := redis.NewPool(func() (redis.Conn, error) {
+		c, err := redis.Dial("tcp", *redisAddress)
 
-	// getting current state. This should probably come from cache
-	Record = true
+		if err != nil {
+			log.WithFields(log.Fields{"Error": err.Error()}).Panic("Failed to create Redis connection pool!")
+			return nil, err
+		}
+
+		return c, err
+	}, *maxConnections)
+
+	defer redisPool.Close()
+
+	h := HTTPClientHandler{http: Client{&http.Client{}}, r: r, pool: redisPool}
 
 	mux := getBoneRouter(h)
 	n := negroni.Classic()
@@ -85,6 +99,9 @@ func main() {
 func getBoneRouter(h HTTPClientHandler) *bone.Mux {
 	mux := bone.New()
 	mux.Get("/1.1/search/tweets.json", http.HandlerFunc(h.tweetSearchEndpoint))
+	mux.Get("/admin", http.HandlerFunc(h.adminHandler))
+	mux.Post("/admin/state", http.HandlerFunc(h.stateHandler))
+	mux.Get("/admin/state", http.HandlerFunc(h.getStateHandler))
 	// handling static files
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
