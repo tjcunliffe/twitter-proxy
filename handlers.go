@@ -4,6 +4,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"io/ioutil"
     "strings"
+	"github.com/garyburd/redigo/redis"
 )
 
 func (h HTTPClientHandler) tweetSearchEndpoint(w http.ResponseWriter, r *http.Request) {
@@ -33,7 +34,10 @@ func (h HTTPClientHandler) tweetSearchEndpoint(w http.ResponseWriter, r *http.Re
 
 	client := h.http.HTTPClient
 
-	if Record {
+	// getting current proxy state
+	record := h.getCurrentState()
+
+	if record {
 		log.Info("*RECORD* mode detected")
 
 		// here we could probably reuse url path
@@ -99,6 +103,7 @@ func (h HTTPClientHandler) tweetSearchEndpoint(w http.ResponseWriter, r *http.Re
 		w.WriteHeader(data.StatusCode)
 		w.Write(data.Body)
 	}
+}
 
 // getCurrentState returns current proxy state (record is default one since if Mirage is not around it will get response
 // from external service and return it to the client
