@@ -33,9 +33,9 @@ type Mirage struct {
 }
 
 type MirageResponse struct {
-	Body []byte `json:"body"`
+	Body       []byte `json:"body"`
 	StatusCode int `json:"statusCode"`
-	Headers map[string]string `json:"headers"`
+	Headers    map[string]string `json:"headers"`
 }
 
 // params structure holds information about request to Mirage formation
@@ -65,7 +65,7 @@ func createMiragePayload(matcher string, request *http.Request, response *http.R
 	// headers := getHeaders(request)
 	// mirageObj.Request.Headers = headers
 	// assigning request method
-//	mirageObj.Request.Method = request.Method
+	//	mirageObj.Request.Method = request.Method
 	mirageObj.Request.Method = "POST"
 	// getting contains matcher
 	bodyPatterns := make(map[string][]string)
@@ -121,10 +121,14 @@ func (c *Client) recordRequest(scenario, session, matcher string, request *http.
 
 		// pretty printing for debugging
 		b, _ := prettyprint(bts)
-		fmt.Printf("%s", b)
+
+		log.WithFields(log.Fields{
+			"Request": b,
+
+		}).Debug("Mirage payload")
 
 		// uploading payload to Mirage
-        c.makeRequest(s)
+		c.makeRequest(s)
 
 	} else {
 		log.Error("Scenario or session not supplied.")
@@ -134,14 +138,14 @@ func (c *Client) recordRequest(scenario, session, matcher string, request *http.
 
 // playbackResponse gets response form Mirage and returns all necessary data to recreate original response from
 // external service
-func (c *Client) playbackResponse(scenario, session, matcher string) (MirageResponse){
+func (c *Client) playbackResponse(scenario, session, matcher string) (MirageResponse) {
 	var data MirageResponse
 	if (scenario != "" && session != "") {
 		mirageMatcherEndpoint := AppConfig.MirageEndpoint + "/api/v2/matcher"
 
 
 		req, err := http.NewRequest("POST", mirageMatcherEndpoint, bytes.NewBuffer([]byte(matcher)))
-		if(err != nil) {
+		if (err != nil) {
 			log.Error(err)
 		}
 		req.Header.Add("session", fmt.Sprintf("%s:%s", scenario, session))
@@ -156,7 +160,7 @@ func (c *Client) playbackResponse(scenario, session, matcher string) (MirageResp
 
 
 		err = json.Unmarshal(mrgResponseBytes, &data)
-		if(err != nil) {
+		if (err != nil) {
 			log.Error(err)
 		}
 
@@ -164,7 +168,7 @@ func (c *Client) playbackResponse(scenario, session, matcher string) (MirageResp
 
 	} else {
 		log.Error("Scenario or session not supplied during playback, can't send response")
-        return data
+		return data
 	}
 }
 
