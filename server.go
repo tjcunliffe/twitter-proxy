@@ -69,10 +69,28 @@ func main() {
 	// getting base template and handler struct
 	r := render.New(render.Options{Layout: "layout"})
 
-	h := HTTPClientHandler{http: Client{&http.Client{}}, r: r}
+	// getting redis client for state storing
+	redisPool := redis.NewPool(func() (redis.Conn, error) {
+		c, err := redis.Dial("tcp", *redisAddress)
 
-	// getting current state. This should probably come from cache
-	Record = false
+		if err != nil {
+			return nil, err
+		}
+
+		return c, err
+	}, *maxConnections)
+
+	defer redisPool.Close()
+
+
+
+//	redisClient, err := redis.Dial("tcp", ":6379")
+//	if err != nil {
+//		log.WithFields(log.Fields{
+//			"Error": err.Error()}).Error("Failed to connect to Redis, state switching might be available")
+//	}
+
+	h := HTTPClientHandler{http: Client{&http.Client{}}, r: r, pool: redisPool}
 
 	mux := getBoneRouter(h)
 	n := negroni.Classic()
