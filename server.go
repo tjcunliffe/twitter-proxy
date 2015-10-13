@@ -39,6 +39,8 @@ type HTTPClientHandler struct {
 var (
 	redisAddress   = flag.String("redis-address", ":6379", "Address to the Redis server")
 	maxConnections = flag.Int("max-connections", 10, "Max connections to Redis")
+	// like ./twitter-proxy -port=":8080" would start on port 8080
+	port = flag.String("port", ":8300", "Server port")
 )
 
 func main() {
@@ -65,10 +67,7 @@ func main() {
 		"ExternalSystemEndpoint": AppConfig.ExternalSystem,
 	}).Info("app is starting")
 
-	// looking for option args when starting App
-	// like ./twitter-app -port=":8080" would start on port 8080
-	var port = flag.String("port", ":8300", "Server port")
-	flag.Parse() // parse the flag
+	flag.Parse() // parse the flags
 
 	// getting base template and handler struct
 	r := render.New(render.Options{Layout: "layout"})
