@@ -99,4 +99,27 @@ func (h HTTPClientHandler) tweetSearchEndpoint(w http.ResponseWriter, r *http.Re
 		w.WriteHeader(data.StatusCode)
 		w.Write(data.Body)
 	}
+
+// getCurrentState returns current proxy state (record is default one since if Mirage is not around it will get response
+// from external service and return it to the client
+func (h HTTPClientHandler) getCurrentState() (bool) {
+	// default state
+	record := true
+
+	c := h.pool.Get()
+	defer c.Close()
+
+	state, err := redis.Bool(c.Do("GET", "twproxy"))
+	if err != nil {
+		log.Warning("State not found, switching to recording mode")
+		c.Do("SET", "twproxy", record)
+		return record
+	} else {
+		log.WithFields(log.Fields{
+			"state": state,
+		}).Info("Proxy configuration found in Redis...")
+	    return state
+	}
+}
+
 }
