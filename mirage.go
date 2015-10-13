@@ -45,15 +45,7 @@ type params struct {
 	headers              map[string]string
 }
 
-// getHeaders forms a map of headers from http request headers
-func getHeaders(req *http.Request) (map[string]string) {
-	headers := make(map[string]string)
-	for key, value := range req.Header {
-		headers[key] = value[0]
-	}
-	return headers
-}
-
+// getHeadersMap converts map[string][]string to map[string]string structure
 func getHeadersMap(hds map[string][]string) (map[string]string) {
 	headers := make(map[string]string)
 	for key, value := range hds {
@@ -140,6 +132,8 @@ func (c *Client) recordRequest(scenario, session, matcher string, request *http.
 	return
 }
 
+// playbackResponse gets response form Mirage and returns all necessary data to recreate original response from
+// external service
 func (c *Client) playbackResponse(scenario, session, matcher string) (MirageResponse){
 	var data MirageResponse
 	if (scenario != "" && session != "") {
@@ -177,7 +171,7 @@ func (c *Client) playbackResponse(scenario, session, matcher string) (MirageResp
 
 // makeRequest takes Params struct as parameters and makes request to Mirage
 // then gets response bytes and returns to caller
-func (c *Client) makeRequest(s params) () {
+func (c *Client) makeRequest(s params) {
 
 	log.WithFields(log.Fields{
 		"url":           s.url,
@@ -212,3 +206,4 @@ func (c *Client) makeRequest(s params) () {
 		}
 	}
 }
+
