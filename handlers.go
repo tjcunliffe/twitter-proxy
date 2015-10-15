@@ -109,11 +109,26 @@ func (h HTTPClientHandler) tweetSearchEndpoint(w http.ResponseWriter, r *http.Re
 		// playback time!!
 		log.Info("PLAYBACK MODE")
 		data := h.http.playbackResponse(scenario, session, queryString[0])
-		for k, v := range data.Headers {
-			w.Header().Set(k, v)
+		if (data.StatusCode != 200) {
+
+			log.WithFields(log.Fields{
+				"statusCode": data.StatusCode,
+				"body": data.Body,
+				"errorMsg": data.Error,
+			}).Warn("Mirage could not find matching request/response...")
+
+			// returning http error
+			http.Error(w, data.Error, data.StatusCode)
+		} else {
+			if (len(data.Headers) > 0 ) {
+				for k, v := range data.Headers {
+					w.Header().Set(k, v)
+				}
+			}
+			w.WriteHeader(data.StatusCode)
+			w.Write(data.Body)
 		}
-		w.WriteHeader(data.StatusCode)
-		w.Write(data.Body)
+
 	}
 }
 
