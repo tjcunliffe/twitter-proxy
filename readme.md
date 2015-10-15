@@ -12,7 +12,12 @@ This application uses vendor strategy to manage dependencies:
 ## Configuration
 
 Proxy only needs some basic configuration such as where you keep Mirage and where is the real external system endpoint.
- 
+
+Prefered way is to set environment variables:
+export MirageEndpoint=http://localhost:8001
+export ExternalSystem=https://api.twitter.com
+
+However, you can also specify them in a file:
 Congfiguration file example:
 
 {
@@ -21,8 +26,8 @@ Congfiguration file example:
 }
 
 Since proxy is storing state in Redis - you may also want to change default Redis address (it's looking for Redis instance
-on localhost:6376. You can override this by providing flag during startup:
-./twitter-proxy -redis-address="someotherhost:9999"
+on localhost:6376. You can override this by exporting environment variable:
+export RedisAddress=somehost:6379
 
 or max Redis connections in the pool (10 is default number):
 ./twitter-proxy -max-connections=20
