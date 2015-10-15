@@ -142,7 +142,7 @@ func (h HTTPClientHandler) stateHandler(w http.ResponseWriter, r *http.Request) 
 	defer r.Body.Close()
 	body, err := ioutil.ReadAll(r.Body)
 
-	if(err != nil){
+	if (err != nil) {
 		// failed to read response body
 		log.WithFields(log.Fields{
 			"error": err.Error(),
@@ -180,7 +180,7 @@ func (h HTTPClientHandler) stateHandler(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h HTTPClientHandler) getStateHandler(w http.ResponseWriter, r *http.Request) {
-    // getting current state
+	// getting current state
 	record := h.getCurrentState()
 
 	var resp StateRequest
