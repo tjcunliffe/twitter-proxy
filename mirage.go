@@ -34,6 +34,7 @@ type Mirage struct {
 
 type MirageResponse struct {
 	Body       []byte `json:"body"`
+	Error      string `json:"error"`
 	StatusCode int `json:"statusCode"`
 	Headers    map[string]string `json:"headers"`
 }
