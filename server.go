@@ -37,28 +37,44 @@ type HTTPClientHandler struct {
 }
 
 var (
-	redisAddress   = flag.String("redis-address", ":6379", "Address to the Redis server")
 	maxConnections = flag.Int("max-connections", 10, "Max connections to Redis")
 	// like ./twitter-proxy -port=":8080" would start on port 8080
 	port = flag.String("port", ":8300", "Server port")
 )
 
 func main() {
+	flag.Parse() // parse the flags
 	// Output to stderr instead of stdout, could also be a file.
 	log.SetOutput(os.Stderr)
 	log.SetFormatter(&log.TextFormatter{})
 
+	// getting app config
+	mirageEndpoint := os.Getenv("MirageEndpoint")
+	externalSystem := os.Getenv("ExternalSystem")
 
-	// getting configuration
-	file, err := os.Open("conf.json")
-	if err != nil {
-		log.Panic("Failed to open configuration file, quiting server.")
+	if(mirageEndpoint != "" && externalSystem != ""){
+		log.Info("Environment variables found.")
+		AppConfig.ExternalSystem = externalSystem
+		AppConfig.MirageEndpoint = mirageEndpoint
+	} else {
+		log.Info("Environment variables not found, reading config from file.")
+		// env variables not found, getting configuration from file
+		file, err := os.Open("conf.json")
+		if err != nil {
+			log.Panic("Failed to open configuration file, quiting server.")
+		}
+		decoder := json.NewDecoder(file)
+		AppConfig = Configuration{}
+		err = decoder.Decode(&AppConfig)
+		if err != nil {
+			log.WithFields(log.Fields{"Error": err.Error()}).Panic("Failed to read configuration")
+		}
 	}
-	decoder := json.NewDecoder(file)
-	AppConfig = Configuration{}
-	err = decoder.Decode(&AppConfig)
-	if err != nil {
-		log.WithFields(log.Fields{"Error": err.Error()}).Panic("Failed to read configuration")
+
+	// getting redis connection
+	redisAddress := os.Getenv("RedisAddress")
+	if(redisAddress == ""){
+		redisAddress = ":6379"
 	}
 
 	// app starting
@@ -67,14 +83,12 @@ func main() {
 		"ExternalSystemEndpoint": AppConfig.ExternalSystem,
 	}).Info("app is starting")
 
-	flag.Parse() // parse the flags
-
 	// getting base template and handler struct
 	r := render.New(render.Options{Layout: "layout"})
 
 	// getting redis client for state storing
 	redisPool := redis.NewPool(func() (redis.Conn, error) {
-		c, err := redis.Dial("tcp", *redisAddress)
+		c, err := redis.Dial("tcp", redisAddress)
 
 		if err != nil {
 			log.WithFields(log.Fields{"Error": err.Error()}).Panic("Failed to create Redis connection pool!")
